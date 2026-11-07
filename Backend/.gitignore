@@ -1,0 +1,5 @@
+node_modules/
+.env
+chain/cache/
+chain/artifacts/
+coverage/

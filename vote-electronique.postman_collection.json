@@ -1,0 +1,411 @@
+{
+  "info": {
+    "name": "Vote électronique — backend",
+    "description": "Collection à lancer dans l'ordre avec le Collection Runner.\n\nSélectionne l'environnement « Vote électronique — local ». N'utilise pas GCD Yas : il écrase baseUrl.\n\nAvant le run :\n1. `npm run chain:node`\n2. `npm run chain:deploy` (chaîne neuve, sinon la création du scrutin échoue)\n3. `npm start`\n\nLa clé admin par défaut est celle de Backend/.env.example. Change `adminKey` dans l'environnement si tu l'as modifiée.\nLe numéro de carte et le nom ne sont jamais renvoyés par l'API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "voteBaseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "adminKey",
+      "value": "change-me-admin"
+    },
+    {
+      "key": "idNumber",
+      "value": "AB123"
+    },
+    {
+      "key": "fullName",
+      "value": "Koffi Ame"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 — Santé",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API disponible', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().status).to.eql('ok');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{voteBaseUrl}}/api/health"
+      }
+    },
+    {
+      "name": "02 — Créer le scrutin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Scrutin créé', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.status).to.eql('created');",
+              "    pm.expect(body.txHash).to.match(/^0x[0-9a-fA-F]{64}$/);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-admin-key",
+            "value": "{{adminKey}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Election test\",\n  \"choices\": [\"Awa\", \"Koffi\", \"Yao\", \"Ama\", \"Esi\"]\n}"
+        },
+        "url": "{{voteBaseUrl}}/api/admin/election"
+      }
+    },
+    {
+      "name": "03 — Ouvrir le scrutin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Scrutin ouvert', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().status).to.eql('open');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-admin-key",
+            "value": "{{adminKey}}"
+          }
+        ],
+        "url": "{{voteBaseUrl}}/api/admin/election/open"
+      }
+    },
+    {
+      "name": "04 — Électeur pas encore inscrit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Pas encore inscrit ni votant', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.registered).to.eql(false);",
+              "    pm.expect(body.hasVoted).to.eql(false);",
+              "    pm.expect(body.idNumber).to.be.undefined;",
+              "    pm.expect(body.fullName).to.be.undefined;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idNumber\": \"{{idNumber}}\",\n  \"fullName\": \"{{fullName}}\"\n}"
+        },
+        "url": "{{voteBaseUrl}}/api/voters/identify"
+      }
+    },
+    {
+      "name": "05 — Scrutin ouvert sans décomptes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Résultats encore masqués', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.exists).to.eql(true);",
+              "    pm.expect(body.state).to.eql('Open');",
+              "    pm.expect(body.choices).to.have.lengthOf(5);",
+              "    pm.expect(body.turnout).to.eql(0);",
+              "    pm.expect(body.tallies).to.be.undefined;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{voteBaseUrl}}/api/election"
+      }
+    },
+    {
+      "name": "06 — Voter",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Vote accepté', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.status).to.eql('voted');",
+              "    pm.expect(body.txHash).to.match(/^0x[0-9a-fA-F]{64}$/);",
+              "    pm.expect(JSON.stringify(body)).to.not.include(pm.collectionVariables.get('idNumber'));",
+              "    pm.expect(JSON.stringify(body)).to.not.include(pm.collectionVariables.get('fullName'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idNumber\": \"{{idNumber}}\",\n  \"fullName\": \"{{fullName}}\",\n  \"choiceId\": 1\n}"
+        },
+        "url": "{{voteBaseUrl}}/api/votes"
+      }
+    },
+    {
+      "name": "07 — Second vote refusé",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Un seul vote', function () {",
+              "    pm.response.to.have.status(409);",
+              "    pm.expect(pm.response.json().error).to.eql('ALREADY_VOTED');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idNumber\": \"ab-123\",\n  \"fullName\": \"  koffi   ame \",\n  \"choiceId\": 0\n}"
+        },
+        "url": "{{voteBaseUrl}}/api/votes"
+      }
+    },
+    {
+      "name": "08 — Électeur a voté",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Inscrit et a voté', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.registered).to.eql(true);",
+              "    pm.expect(body.hasVoted).to.eql(true);",
+              "    pm.expect(body.choiceId).to.be.undefined;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idNumber\": \"{{idNumber}}\",\n  \"fullName\": \"{{fullName}}\"\n}"
+        },
+        "url": "{{voteBaseUrl}}/api/voters/identify"
+      }
+    },
+    {
+      "name": "09 — Participation sans décomptes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Une participation, résultats masqués', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.state).to.eql('Open');",
+              "    pm.expect(body.turnout).to.eql(1);",
+              "    pm.expect(body.tallies).to.be.undefined;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{voteBaseUrl}}/api/election"
+      }
+    },
+    {
+      "name": "10 — Clôturer le scrutin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Scrutin clôturé', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().status).to.eql('closed');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-admin-key",
+            "value": "{{adminKey}}"
+          }
+        ],
+        "url": "{{voteBaseUrl}}/api/admin/election/close"
+      }
+    },
+    {
+      "name": "11 — Publier les résultats",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Résultats publiés', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().status).to.eql('results-published');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-admin-key",
+            "value": "{{adminKey}}"
+          }
+        ],
+        "url": "{{voteBaseUrl}}/api/admin/election/publish-results"
+      }
+    },
+    {
+      "name": "12 — Résultats publics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Décomptes visibles', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.state).to.eql('ResultsPublished');",
+              "    pm.expect(body.tallies).to.have.lengthOf(5);",
+              "    pm.expect(body.tallies[1].label).to.eql('Koffi');",
+              "    pm.expect(body.tallies[1].votes).to.eql(1);",
+              "    pm.expect(body.turnout).to.eql(1);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{voteBaseUrl}}/api/election"
+      }
+    },
+    {
+      "name": "13 — Journal des transactions",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Journal sans identité en clair', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    const raw = JSON.stringify(body);",
+              "    pm.expect(body.transactions.length).to.be.above(0);",
+              "    pm.expect(raw).to.not.include(pm.collectionVariables.get('fullName'));",
+              "    pm.expect(raw).to.not.include(pm.collectionVariables.get('idNumber'));",
+              "    const vote = body.transactions.find((entry) => entry.type === 'VoteCast');",
+              "    pm.expect(vote).to.be.an('object');",
+              "    pm.expect(vote.voterHash).to.match(/^0x[0-9a-fA-F]{64}$/);",
+              "    pm.expect(vote.choiceId).to.be.undefined;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{voteBaseUrl}}/api/election/transactions"
+      }
+    }
+  ]
+}

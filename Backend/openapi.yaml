@@ -1,0 +1,235 @@
+openapi: 3.0.3
+info:
+  title: Vote électronique
+  version: 1.0.0
+  description: API backend. L'identité en clair n'est jamais stockée. Seul un HMAC-SHA256 part sur la chaîne.
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/health:
+    get:
+      summary: Santé de l'API
+      responses:
+        "200":
+          description: API disponible
+  /api/election:
+    get:
+      summary: Scrutin public
+      description: Les décomptes ne sont présents que lorsque l'état est ResultsPublished.
+      responses:
+        "200":
+          description: Métadonnées du scrutin. tallies n'est présent que si state vaut ResultsPublished.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Election"
+              examples:
+                ouvert:
+                  value:
+                    exists: true
+                    title: Election test
+                    state: Open
+                    choices: [Awa, Koffi, Yao, Ama, Esi]
+                    turnout: 1
+                publie:
+                  value:
+                    exists: true
+                    title: Election test
+                    state: ResultsPublished
+                    choices: [Awa, Koffi, Yao, Ama, Esi]
+                    turnout: 1
+                    tallies:
+                      - choiceId: 1
+                        label: Koffi
+                        votes: 1
+        "503":
+          description: Chaîne non configurée ou injoignable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/election/transactions:
+    get:
+      summary: Journal des transactions
+      responses:
+        "200":
+          description: Événements on-chain, sans identité en clair
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Journal"
+  /api/voters/identify:
+    post:
+      summary: Statut d'un électeur
+      description: Calcule le hash et lit la chaîne. N'inscrit pas l'électeur.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Identity"
+      responses:
+        "200":
+          description: Statut registered et hasVoted. Le choix du candidat n'est jamais renvoyé.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoterStatus"
+              example:
+                registered: true
+                hasVoted: false
+  /api/votes:
+    post:
+      summary: Voter
+      description: Inscrit le hash si besoin, puis enregistre un seul vote.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Vote"
+      responses:
+        "201":
+          description: Vote enregistré
+        "409":
+          description: Déjà voté, ou scrutin fermé
+  /api/admin/election:
+    post:
+      summary: Créer le scrutin
+      parameters:
+        - $ref: "#/components/parameters/AdminKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ElectionCreate"
+      responses:
+        "201":
+          description: Scrutin créé
+        "401":
+          description: Clé admin invalide
+  /api/admin/election/open:
+    post:
+      summary: Ouvrir le scrutin
+      parameters:
+        - $ref: "#/components/parameters/AdminKey"
+      responses:
+        "200":
+          description: Scrutin ouvert
+  /api/admin/election/close:
+    post:
+      summary: Clôturer le scrutin
+      parameters:
+        - $ref: "#/components/parameters/AdminKey"
+      responses:
+        "200":
+          description: Scrutin clôturé
+  /api/admin/election/publish-results:
+    post:
+      summary: Publier les résultats
+      parameters:
+        - $ref: "#/components/parameters/AdminKey"
+      responses:
+        "200":
+          description: Résultats publiés
+components:
+  parameters:
+    AdminKey:
+      in: header
+      name: x-admin-key
+      required: true
+      schema:
+        type: string
+  schemas:
+    Identity:
+      type: object
+      required: [idNumber, fullName]
+      properties:
+        idNumber:
+          type: string
+        fullName:
+          type: string
+    Vote:
+      allOf:
+        - $ref: "#/components/schemas/Identity"
+        - type: object
+          required: [choiceId]
+          properties:
+            choiceId:
+              type: integer
+              minimum: 0
+              description: Index dans choices. 0 = premier candidat.
+    ElectionCreate:
+      type: object
+      required: [title, choices]
+      properties:
+        title:
+          type: string
+        choices:
+          type: array
+          minItems: 2
+          items:
+            type: string
+    Election:
+      type: object
+      required: [exists]
+      properties:
+        exists:
+          type: boolean
+        title:
+          type: string
+        state:
+          type: string
+          enum: [Draft, Open, Closed, ResultsPublished]
+        choices:
+          type: array
+          items:
+            type: string
+        turnout:
+          type: integer
+        tallies:
+          type: array
+          description: Présent uniquement quand state vaut ResultsPublished.
+          items:
+            type: object
+            properties:
+              choiceId:
+                type: integer
+              label:
+                type: string
+              votes:
+                type: integer
+    VoterStatus:
+      type: object
+      required: [registered, hasVoted]
+      properties:
+        registered:
+          type: boolean
+        hasVoted:
+          type: boolean
+    Journal:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [ElectionCreated, ElectionOpened, ElectionClosed, ResultsPublished, VoterRegistered, VoteCast]
+              txHash:
+                type: string
+              blockNumber:
+                type: integer
+              voterHash:
+                type: string
+                nullable: true
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string

@@ -1,0 +1,36 @@
+const fs = require("node:fs");
+const path = require("node:path");
+const { ethers } = require("hardhat");
+
+const LOCAL_RELAYER_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+
+function upsert(content, key, value) {
+  const line = `${key}=${value}`;
+  const pattern = new RegExp(`^${key}=.*$`, "m");
+  if (pattern.test(content)) {
+    return content.replace(pattern, line);
+  }
+  return `${content.replace(/\s*$/, "")}\n${line}\n`;
+}
+
+async function main() {
+  const factory = await ethers.getContractFactory("Voting");
+  const contract = await factory.deploy();
+  await contract.waitForDeployment();
+  const address = await contract.getAddress();
+  console.log(address);
+
+  const envPath = path.join(__dirname, "..", ".env");
+  const examplePath = path.join(__dirname, "..", ".env.example");
+  const current = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : fs.readFileSync(examplePath, "utf8");
+  let next = upsert(current, "CONTRACT_ADDRESS", address);
+  if (!/^RELAYER_PRIVATE_KEY=\S+/m.test(next)) {
+    next = upsert(next, "RELAYER_PRIVATE_KEY", LOCAL_RELAYER_KEY);
+  }
+  fs.writeFileSync(envPath, next);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
