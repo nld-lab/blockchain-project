@@ -12,7 +12,6 @@
     "test": "node --test",
     "chain:compile": "hardhat compile",
     "chain:node": "hardhat node",
-    "chain:watch": "node scripts/watch-blocks.js",
     "chain:deploy": "hardhat run scripts/deploy.cjs --network localhost"
   },
   "dependencies": {
