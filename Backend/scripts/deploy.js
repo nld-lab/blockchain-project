@@ -1,6 +1,9 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const { ethers } = require("hardhat");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { network } from "hardhat";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const LOCAL_RELAYER_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
@@ -14,6 +17,7 @@ function upsert(content, key, value) {
 }
 
 async function main() {
+  const { ethers } = await network.connect();
   const factory = await ethers.getContractFactory("Voting");
   const contract = await factory.deploy();
   await contract.waitForDeployment();
