@@ -80,8 +80,7 @@ async function showNew(heading) {
 const latest = await provider.getBlockNumber();
 for (let number = 0; number <= latest; number += 1) {
   const block = await provider.getBlock(number);
-  const heading = await describe(block);
-  printReady(heading);
+  printReady(await describe(block));
   console.log(block.hash);
 }
 

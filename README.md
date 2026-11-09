@@ -283,7 +283,7 @@ Corps de la requête d'identification :
 
 ```json
 {
-  "idNumber": "AB123",
+  "idNumber": "10234567890",
   "fullName": "Koffi Ame"
 }
 ```
@@ -292,7 +292,7 @@ Corps de la requête de vote :
 
 ```json
 {
-  "idNumber": "AB123",
+  "idNumber": "10234567890",
   "fullName": "Koffi Ame",
   "choiceId": 1
 }

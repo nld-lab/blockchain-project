@@ -1,8 +1,11 @@
+import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import hardhat from "hardhat";
 
+const require = createRequire(import.meta.url);
+const { ethers } = require("hardhat");
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const LOCAL_RELAYER_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";

@@ -148,6 +148,8 @@ components:
       properties:
         idNumber:
           type: string
+          description: Numéro imprimé sur la carte nationale d'identité togolaise. 11 chiffres. Les espaces et les deux tirets de la carte sont acceptés, puis ignorés.
+          example: "10234567890"
         fullName:
           type: string
     Vote:

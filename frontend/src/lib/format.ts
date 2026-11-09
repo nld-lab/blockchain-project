@@ -11,8 +11,24 @@ export function stateLabel(state?: string) {
   }[state || ""] || "Indisponible";
 }
 
+export function cniNumberMessage(value: string) {
+  const compact = value.normalize("NFC").trim().replace(/\s+/g, "");
+  const digits = compact.replaceAll("-", "");
+  const printed =
+    /^\d{11}$/.test(compact) || (/^\d+-\d+-\d+$/.test(compact) && digits.length === 11);
+  return printed ? "" : "Le numéro de la carte nationale d'identité comporte 11 chiffres.";
+}
+
 export function errorMessage(error: unknown) {
-  const code = (error as { code?: string })?.code;
+  const caught = error as { code?: string; details?: unknown };
+  if (
+    caught.code === "VALIDATION" &&
+    Array.isArray(caught.details) &&
+    typeof caught.details[0] === "string"
+  ) {
+    return caught.details[0];
+  }
+  const code = caught.code;
   return {
     ALREADY_VOTED: "Vous avez déjà participé à ce scrutin.",
     ELECTION_NOT_OPEN: "Le scrutin n'est pas ouvert actuellement.",

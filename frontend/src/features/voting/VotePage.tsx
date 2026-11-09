@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
-import { errorMessage, stateLabel } from "@/lib/format";
+import { cniNumberMessage, errorMessage, stateLabel } from "@/lib/format";
 import { useElection } from "@/features/election/useElection";
 import { Loading } from "@/features/shared/Loading";
 import { useScrollReveal } from "@/features/shared/useScrollReveal";
@@ -65,6 +65,11 @@ export function VotePage() {
     setBusy(true);
     setMessage("");
     try {
+      const cardError = cniNumberMessage(identity.idNumber);
+      if (cardError) {
+        setMessage(cardError);
+        return;
+      }
       const status = await api.identify(identity.idNumber, identity.fullName);
       if (status.hasVoted) setMessage("Vous avez déjà participé à ce scrutin.");
       else setIdentified(true);
@@ -117,7 +122,7 @@ export function VotePage() {
           <CardHeader>
             <CardTitle className="font-heading text-4xl tracking-wide">Vérifier votre identité</CardTitle>
             <CardDescription>
-              Renseignez les informations associées à votre carte électorale.
+              Renseignez le numéro à 11 chiffres imprimé sur votre carte nationale d'identité, puis votre nom.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -127,15 +132,22 @@ export function VotePage() {
             >
               <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="idNumber">Numéro de carte</Label>
+                <Label htmlFor="idNumber">Numéro de carte d'identité</Label>
                 <Input
                   id="idNumber"
                   required
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="10234567890"
+                  aria-describedby="idNumber-help"
                   value={identity.idNumber}
                   onChange={(event) =>
                     setIdentity({ ...identity, idNumber: event.target.value })
                   }
                 />
+                <p id="idNumber-help" className="text-sm text-[#5b5042]">
+                  11 chiffres. Les deux tirets imprimés sur la carte sont acceptés.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fullName">Nom complet</Label>
