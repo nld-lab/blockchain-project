@@ -1,0 +1,5 @@
+node_modules
+chain/artifacts
+chain/cache
+.env
+npm-debug.log

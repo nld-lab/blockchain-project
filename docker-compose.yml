@@ -1,0 +1,59 @@
+services:
+  blockchain:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    command: npx hardhat node --hostname 0.0.0.0
+    working_dir: /app
+    ports:
+      - "${RPC_PORT:-8545}:8545"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://localhost:8545',{method:'POST',headers:{'content-type':'application/json'},
+          body:'{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'})
+          .then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      HMAC_SECRET: ${HMAC_SECRET:-change-me}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-change-me-admin}
+      RPC_URL: http://blockchain:8545
+      HARDHAT_RPC_URL: http://blockchain:8545
+      CHAIN_ID: 31337
+      RELAYER_PRIVATE_KEY: ${RELAYER_PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}
+    depends_on:
+      blockchain:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-3100}:3000"
+    command: ["sh", "-c", "npm run chain:compile && npm run chain:deploy && exec npm start"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3100}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"

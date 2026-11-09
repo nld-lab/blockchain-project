@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CheckCircle2, Copy } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,21 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { shortHash } from "@/lib/format";
 import { useScrollReveal } from "@/features/shared/useScrollReveal";
 
 export function ConfirmationPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as { txHash?: string; choice?: string } | null;
-  const [copied, setCopied] = useState(false);
   const scope = useScrollReveal([]);
-
-  const copy = async () => {
-    if (!state?.txHash) return;
-    await navigator.clipboard.writeText(state.txHash);
-    setCopied(true);
-  };
 
   return (
     <div ref={scope} className="px-5 py-12 sm:px-10 lg:py-16">

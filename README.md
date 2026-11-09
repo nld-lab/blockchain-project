@@ -205,6 +205,29 @@ npm run dev
 
 Vite affiche l'URL locale, généralement `http://localhost:5173`.
 
+## Démarrage avec Docker
+
+Docker Compose démarre automatiquement le nœud Hardhat, déploie le contrat,
+puis lance l'API et le frontend :
+
+```bash
+docker compose up --build
+```
+
+Le frontend est accessible sur `http://localhost:8080`, l'API sur
+`http://localhost:3100` et le RPC sur `http://localhost:8545`. Les ports
+publiés peuvent être modifiés avec `FRONTEND_PORT`, `BACKEND_PORT` et
+`RPC_PORT`. Le frontend utilise l'URL d'API intégrée lors du build
+(`VITE_API_URL`, `http://localhost:3100` par défaut). Les secrets peuvent être
+surchargés avec un fichier `.env` à la racine du dépôt ; ne réutilisez pas les
+valeurs d'exemple en production.
+
+Pour arrêter et supprimer les conteneurs :
+
+```bash
+docker compose down
+```
+
 ## Utilisation
 
 ### Parcours électeur
