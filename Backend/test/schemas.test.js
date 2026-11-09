@@ -8,8 +8,14 @@ test("refuse une identification vide", () => {
 });
 
 test("refuse un vote sans choix numérique", () => {
-  const parsed = voteSchema.safeParse({ idNumber: "AB123", fullName: "Koffi", choiceId: "1" });
+  const parsed = voteSchema.safeParse({ idNumber: "10234567890", fullName: "Koffi", choiceId: "1" });
   assert.equal(parsed.success, false);
+});
+
+test("accepte le numéro de CNI avec ou sans tirets", () => {
+  assert.equal(identitySchema.safeParse({ idNumber: "10234567890", fullName: "Koffi" }).success, true);
+  assert.equal(identitySchema.safeParse({ idNumber: "1023-456-7890", fullName: "Koffi" }).success, true);
+  assert.equal(identitySchema.safeParse({ idNumber: "AB123", fullName: "Koffi" }).success, false);
 });
 
 test("accepte un scrutin avec au moins deux choix", () => {

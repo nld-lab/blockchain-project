@@ -9,7 +9,11 @@ export function voterHash(idNumber, fullName, secret) {
 
   const material = identityMaterial(idNumber, fullName);
   if (!material) {
-    throw httpError(400, "INVALID_IDENTITY", "Le numéro de carte et le nom sont requis.");
+    throw httpError(
+      400,
+      "INVALID_IDENTITY",
+      "Le numéro de la carte nationale d'identité comporte 11 chiffres, et le nom est requis.",
+    );
   }
 
   return `0x${createHmac("sha256", secret).update(material).digest("hex")}`;

@@ -1,7 +1,12 @@
 import { z } from "zod";
+import { isTogoCniNumber } from "./lib/identity.js";
 
 export const identitySchema = z.object({
-  idNumber: z.string().trim().min(1, "Le numéro de carte est requis."),
+  idNumber: z
+    .string()
+    .trim()
+    .min(1, "Le numéro de carte est requis.")
+    .refine(isTogoCniNumber, "Le numéro de la carte nationale d'identité comporte 11 chiffres."),
   fullName: z.string().trim().min(1, "Le nom est requis."),
 });
 

@@ -15,7 +15,7 @@
     },
     {
       "key": "idNumber",
-      "value": "AB123"
+      "value": "10234567890"
     },
     {
       "key": "fullName",
@@ -232,7 +232,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"idNumber\": \"ab-123\",\n  \"fullName\": \"  koffi   ame \",\n  \"choiceId\": 0\n}"
+          "raw": "{\n  \"idNumber\": \"1023-456-7890\",\n  \"fullName\": \"  koffi   ame \",\n  \"choiceId\": 0\n}"
         },
         "url": "{{voteBaseUrl}}/api/votes"
       }
