@@ -74,7 +74,7 @@ frontend.
 
 ## Prérequis
 
-- Node.js 20 ou supérieur ;
+- Node.js 22.13.0 ou supérieur ;
 - npm ;
 - deux terminaux pour le nœud blockchain et l'API ;
 - un navigateur récent.
