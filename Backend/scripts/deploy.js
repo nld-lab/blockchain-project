@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import hardhat from "hardhat";
 
 const require = createRequire(import.meta.url);
 const { ethers } = require("hardhat");
@@ -19,6 +20,7 @@ function upsert(content, key, value) {
 }
 
 async function main() {
+  const { ethers } = hardhat;
   const factory = await ethers.getContractFactory("Voting");
   const contract = await factory.deploy();
   await contract.waitForDeployment();

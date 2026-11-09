@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/card";
 import { useElection } from "@/features/election/useElection";
 import { Loading } from "@/features/shared/Loading";
+import { useScrollReveal } from "@/features/shared/useScrollReveal";
 
 export function ResultsPage() {
   const { election, loading, error } = useElection();
+  const scope = useScrollReveal([loading, election?.state, election?.tallies?.length]);
 
   if (loading) return <Loading />;
   if (error) {
@@ -25,8 +27,8 @@ export function ResultsPage() {
   const published = election?.state === "ResultsPublished";
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-5 py-12 sm:px-10 lg:py-16">
-      <div>
+    <div ref={scope} className="mx-auto max-w-7xl space-y-8 px-5 py-12 sm:px-10 lg:py-16">
+      <div className="scroll-reveal">
         <Badge
           className={
             published
@@ -46,7 +48,7 @@ export function ResultsPage() {
         </p>
       </div>
       {published ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="scroll-stagger grid gap-4 md:grid-cols-2">
           {election.tallies?.map((tally) => (
             <Card className="paper-panel" key={tally.choiceId}>
               <CardHeader>
@@ -67,7 +69,7 @@ export function ResultsPage() {
           ))}
         </div>
       ) : (
-        <Card className="paper-panel">
+        <Card className="paper-panel scroll-reveal">
           <CardContent className="pt-6">
             <LockKeyhole className="mb-3 size-8 text-muted-foreground" />
             <p>
