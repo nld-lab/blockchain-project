@@ -10,12 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { shortHash } from "@/lib/format";
+import { useScrollReveal } from "@/features/shared/useScrollReveal";
 
 export function ConfirmationPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as { txHash?: string; choice?: string } | null;
   const [copied, setCopied] = useState(false);
+  const scope = useScrollReveal([]);
 
   const copy = async () => {
     if (!state?.txHash) return;
@@ -24,8 +26,8 @@ export function ConfirmationPage() {
   };
 
   return (
-    <div className="px-5 py-12 sm:px-10 lg:py-16">
-    <Card className="paper-panel mx-auto max-w-2xl text-center">
+    <div ref={scope} className="px-5 py-12 sm:px-10 lg:py-16">
+    <Card className="paper-panel scroll-reveal mx-auto max-w-2xl text-center">
       <CardHeader className="items-center">
         <div className="flex size-16 items-center justify-center border-2 border-[#315d5c] text-[#315d5c]">
           <CheckCircle2 className="size-9" />
@@ -39,7 +41,7 @@ export function ConfirmationPage() {
         <p>
           Choix sélectionné : <strong>{state?.choice || "confidentiel"}</strong>
         </p>
-        {state?.txHash && (
+        {/* {state?.txHash && (
           <div className="border border-[#bcae98] bg-[#f7f1e7] p-3 text-sm">
             <p className="mb-2 text-muted-foreground">Hash de transaction</p>
             <code>{shortHash(state.txHash)}</code>
@@ -54,7 +56,7 @@ export function ConfirmationPage() {
               {copied && <span className="sr-only">Copié</span>}
             </Button>
           </div>
-        )}
+        )} */}
         <Button onClick={() => navigate("/")}>Retour à l'accueil</Button>
       </CardContent>
     </Card>

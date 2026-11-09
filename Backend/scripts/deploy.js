@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { network } from "hardhat";
+import hardhat from "hardhat";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,7 +17,7 @@ function upsert(content, key, value) {
 }
 
 async function main() {
-  const { ethers } = await network.connect();
+  const { ethers } = hardhat;
   const factory = await ethers.getContractFactory("Voting");
   const contract = await factory.deploy();
   await contract.waitForDeployment();

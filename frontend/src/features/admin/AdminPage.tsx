@@ -17,6 +17,7 @@ import { errorMessage } from "@/lib/format";
 import { useElection } from "@/features/election/useElection";
 import { Loading } from "@/features/shared/Loading";
 import { StateBadge } from "@/features/shared/StateBadge";
+import { useScrollReveal } from "@/features/shared/useScrollReveal";
 
 export function AdminPage() {
   const { election, loading, error, reload } = useElection();
@@ -25,6 +26,7 @@ export function AdminPage() {
   const [choices, setChoices] = useState(["", ""]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const scope = useScrollReveal([loading, election?.state]);
 
   if (loading) return <Loading />;
   if (error) {
@@ -57,8 +59,8 @@ export function AdminPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-5 py-12 sm:px-10 lg:py-16">
-      <div>
+    <div ref={scope} className="mx-auto max-w-4xl space-y-8 px-5 py-12 sm:px-10 lg:py-16">
+      <div className="scroll-reveal">
         <Badge className="border-[#8a2e2e]/30 bg-[#8a2e2e]/5 text-[#8a2e2e]">Espace sécurisé</Badge>
         <h1 className="mt-5 font-heading text-6xl leading-none tracking-wide">Administration</h1>
         <p className="mt-5 max-w-xl leading-7 text-[#5b5042]">
@@ -76,7 +78,7 @@ export function AdminPage() {
           {message}
         </Alert>
       )}
-      <Card className="paper-panel">
+      <Card className="paper-panel scroll-reveal">
         <CardHeader>
           <CardTitle className="font-heading text-4xl tracking-wide">Clé administrateur</CardTitle>
           <CardDescription>
@@ -93,7 +95,7 @@ export function AdminPage() {
         </CardContent>
       </Card>
       {!election?.exists || election.state === "Draft" ? (
-        <Card className="paper-panel">
+        <Card className="paper-panel scroll-reveal">
           <CardHeader>
             <CardTitle className="font-heading text-4xl tracking-wide">Créer un scrutin</CardTitle>
             <CardDescription>Ajoutez au moins deux choix.</CardDescription>
@@ -156,7 +158,7 @@ export function AdminPage() {
         </Card>
       ) : null}
       {election?.exists && (
-        <Card className="paper-panel">
+        <Card className="paper-panel scroll-reveal">
           <CardHeader>
             <CardTitle className="font-heading text-4xl tracking-wide">État actuel</CardTitle>
             <CardDescription>{election.title}</CardDescription>

@@ -18,6 +18,7 @@ import { api } from "@/lib/api";
 import { errorMessage, stateLabel } from "@/lib/format";
 import { useElection } from "@/features/election/useElection";
 import { Loading } from "@/features/shared/Loading";
+import { useScrollReveal } from "@/features/shared/useScrollReveal";
 
 export function VotePage() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export function VotePage() {
   const [choiceId, setChoiceId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const scope = useScrollReveal([loading, identified, election?.state]);
 
   if (loading) return <Loading />;
   if (error) {
@@ -38,11 +40,12 @@ export function VotePage() {
   }
   if (!election?.exists || election.state !== "Open") {
     return (
-      <Card className="paper-panel mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Le vote n'est pas ouvert</CardTitle>
-          <CardDescription>
-            {election?.title
+      <div ref={scope} className="mx-auto max-w-4xl space-y-8 px-5 py-12 sm:px-10 lg:py-16">
+        <Card className="paper-panel scroll-reveal mx-auto max-w-2xl">
+          <CardHeader>
+            <CardTitle>Le vote n'est pas ouvert</CardTitle>
+            <CardDescription>
+              {election?.title
               ? `${election.title} · ${stateLabel(election.state)}`
               : "Aucun scrutin actif."}
           </CardDescription>
@@ -53,6 +56,7 @@ export function VotePage() {
           </Link>
         </CardContent>
       </Card>
+    </div>
     );
   }
 
@@ -93,8 +97,8 @@ export function VotePage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-5 py-12 sm:px-10 lg:py-16">
-      <div className="max-w-2xl">
+    <div ref={scope} className="mx-auto max-w-4xl space-y-8 px-5 py-12 sm:px-10 lg:py-16">
+      <div className="scroll-reveal max-w-2xl">
         <Badge className="border-[#315d5c]/30 bg-[#a9d8d5]/60 text-[#315d5c]">
           Vote ouvert
         </Badge>
@@ -109,7 +113,7 @@ export function VotePage() {
         </Alert>
       )}
       {!identified ? (
-        <Card className="paper-panel">
+        <Card className="paper-panel scroll-reveal">
           <CardHeader>
             <CardTitle className="font-heading text-4xl tracking-wide">Vérifier votre identité</CardTitle>
             <CardDescription>
@@ -156,14 +160,14 @@ export function VotePage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="paper-panel">
+        <Card className="paper-panel scroll-reveal">
           <CardHeader>
             <CardTitle className="font-heading text-4xl tracking-wide">Choisissez une option</CardTitle>
             <CardDescription>
               Un seul choix peut être sélectionné.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="scroll-stagger space-y-3">
             {election.choices?.map((choice, index) => (
               <button
                 key={choice}
