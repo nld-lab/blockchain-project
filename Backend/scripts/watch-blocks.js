@@ -22,7 +22,7 @@ function sleep(ms) {
 
 async function describe(block) {
   if (block.number === 0) {
-    return "Bloc 0   Genèse";
+    return "Bloc 0   Genesis";
   }
 
   const labels = [];
@@ -51,8 +51,8 @@ async function describe(block) {
 }
 
 function printHashes(block) {
-  console.log(`Précédent  ${block.parentHash}`);
-  console.log(`Hash       ${block.hash}`);
+  console.log(`Previous  ${block.parentHash}`);
+  console.log(`Hash      ${block.hash}`);
 }
 
 function printReady(heading) {
