@@ -50,6 +50,11 @@ async function describe(block) {
   return `Bloc ${block.number}   ${labels.join(", ")}`;
 }
 
+function printHashes(block) {
+  console.log(`Précédent  ${block.parentHash}`);
+  console.log(`Hash       ${block.hash}`);
+}
+
 function printReady(heading) {
   console.log("");
   console.log(`┌${"─".repeat(innerWidth)}┐`);
@@ -81,7 +86,7 @@ const latest = await provider.getBlockNumber();
 for (let number = 0; number <= latest; number += 1) {
   const block = await provider.getBlock(number);
   printReady(await describe(block));
-  console.log(block.hash);
+  printHashes(block);
 }
 
 console.log("\nEn attente des prochains blocs…");
@@ -90,7 +95,7 @@ provider.on("block", async (number) => {
   try {
     const block = await provider.getBlock(number);
     await showNew(await describe(block));
-    console.log(block.hash);
+    printHashes(block);
   } catch (error) {
     console.error("Lecture du bloc impossible.");
     console.error(error.message);
