@@ -20,12 +20,13 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function describe(block) {
+async function readBlock(block) {
   if (block.number === 0) {
-    return "Bloc 0   Genesis";
+    return { heading: "Bloc 0   Genesis", securityHashes: [] };
   }
 
   const labels = [];
+  const securityHashes = [];
   for (const hash of block.transactions) {
     const transaction = await provider.getTransaction(hash);
     if (!transaction) {
@@ -39,20 +40,26 @@ async function describe(block) {
     try {
       const parsed = contractInterface.parseTransaction({ data: transaction.data });
       labels.push(actionLabels[parsed?.name] || parsed?.name || "Transaction");
+      if (parsed?.name === "castVote") {
+        securityHashes.push(String(parsed.args[0]));
+      }
     } catch {
       labels.push("Transaction");
     }
   }
 
-  if (labels.length === 0) {
-    return `Bloc ${block.number}   Vide`;
-  }
-  return `Bloc ${block.number}   ${labels.join(", ")}`;
+  const heading = labels.length === 0
+    ? `Bloc ${block.number}   Vide`
+    : `Bloc ${block.number}   ${labels.join(", ")}`;
+  return { heading, securityHashes };
 }
 
-function printHashes(block) {
+function printHashes(block, securityHashes) {
   console.log(`Previous  ${block.parentHash}`);
   console.log(`Hash      ${block.hash}`);
+  for (const securityHash of securityHashes) {
+    console.log(`Security  ${securityHash}`);
+  }
 }
 
 function printReady(heading) {
@@ -85,8 +92,9 @@ async function showNew(heading) {
 const latest = await provider.getBlockNumber();
 for (let number = 0; number <= latest; number += 1) {
   const block = await provider.getBlock(number);
-  printReady(await describe(block));
-  printHashes(block);
+  const { heading, securityHashes } = await readBlock(block);
+  printReady(heading);
+  printHashes(block, securityHashes);
 }
 
 console.log("\nEn attente des prochains blocs…");
@@ -94,8 +102,9 @@ console.log("\nEn attente des prochains blocs…");
 provider.on("block", async (number) => {
   try {
     const block = await provider.getBlock(number);
-    await showNew(await describe(block));
-    printHashes(block);
+    const { heading, securityHashes } = await readBlock(block);
+    await showNew(heading);
+    printHashes(block, securityHashes);
   } catch (error) {
     console.error("Lecture du bloc impossible.");
     console.error(error.message);
