@@ -4,6 +4,7 @@ import { httpError } from "../httpError.js";
 import { ELECTION_STATES, votingAbi } from "./votingAbi.js";
 
 let contract;
+let provider;
 
 export function assertChainConfigured() {
   if (!config.contractAddress || !config.relayerPrivateKey) {
@@ -18,18 +19,36 @@ export function assertChainConfigured() {
 export function getContract() {
   assertChainConfigured();
   if (!contract) {
-    const provider = new JsonRpcProvider(config.rpcUrl, config.chainId, {
-      staticNetwork: true,
-      cacheTimeout: -1,
-    });
-    const wallet = new Wallet(config.relayerPrivateKey, provider);
+    const chainProvider = getProvider();
+    const wallet = new Wallet(config.relayerPrivateKey, chainProvider);
     contract = new Contract(config.contractAddress, votingAbi, wallet);
   }
   return contract;
 }
 
+export function getProvider() {
+  if (!provider) {
+    provider = new JsonRpcProvider(config.rpcUrl, config.chainId, {
+      staticNetwork: true,
+      cacheTimeout: -1,
+    });
+  }
+  return provider;
+}
+
 export function resetContract() {
   contract = undefined;
+}
+
+export async function withProvider(action) {
+  try {
+    return await action(getProvider());
+  } catch (error) {
+    if (error.status) {
+      throw error;
+    }
+    throw mapChainError(error);
+  }
 }
 
 function mapChainError(error) {
@@ -120,10 +139,31 @@ export async function readJournal(chain = getContract()) {
         voterHash: event.args?.voterHash ?? null,
       });
     }
+
   }
 
   entries.sort((left, right) => left.blockNumber - right.blockNumber || left.txHash.localeCompare(right.txHash));
   return entries;
+}
+
+export async function readBlocks(chain = getProvider(), limit = 40) {
+  const latestNumber = await chain.getBlockNumber();
+  const firstNumber = Math.max(0, latestNumber - Math.max(1, Math.min(limit, 100)) + 1);
+  const blocks = [];
+
+  for (let number = latestNumber; number >= firstNumber; number -= 1) {
+    const block = await chain.getBlock(number);
+    if (!block) continue;
+    blocks.push({
+      number: block.number,
+      timestamp: block.timestamp,
+      hash: block.hash,
+      previousHash: block.parentHash,
+      transactionCount: block.transactions.length,
+    });
+  }
+
+  return { blocks };
 }
 
 export async function submitVote(chain, voterHashValue, choiceId) {

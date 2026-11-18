@@ -1,4 +1,4 @@
-import type { ApiError, Election, Transaction, VoterStatus } from "@/types/election";
+import type { ApiError, Block, Election, Transaction, VoterStatus } from "@/types/election";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -44,6 +44,7 @@ export const api = {
       body: { idNumber, fullName, choiceId },
     }),
   getTransactions: () => request<{ transactions: Transaction[] }>("/api/election/transactions"),
+  getBlocks: () => request<{ blocks: Block[] }>("/api/blocks?limit=40"),
   createElection: (adminKey: string, title: string, choices: string[]) =>
     request<{ txHash: string }>("/api/admin/election", {
       method: "POST",

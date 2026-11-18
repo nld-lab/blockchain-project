@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { BlocksPage } from "@/features/blocks/BlocksPage";
 import { AppLayout } from "@/features/layout/AppLayout";
 import { HomePage } from "@/features/home/HomePage";
 import { ResultsPage } from "@/features/results/ResultsPage";
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/vote" element={<VotePage />} />
         <Route path="/confirmation" element={<ConfirmationPage />} />
         <Route path="/resultats" element={<ResultsPage />} />
+        <Route path="/blocs" element={<BlocksPage />} />
         <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </AppLayout>

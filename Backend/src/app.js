@@ -5,6 +5,7 @@ import { config } from "./config.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { generalLimit } from "./middleware/rateLimit.js";
 import { adminRouter } from "./routes/admin.js";
+import { blocksRouter } from "./routes/blocks.js";
 import { electionRouter } from "./routes/election.js";
 import { healthRouter } from "./routes/health.js";
 import { votersRouter } from "./routes/voters.js";
@@ -19,6 +20,7 @@ export function createApp() {
   app.use(generalLimit);
   app.use("/api/health", healthRouter);
   app.use("/api/election", electionRouter);
+  app.use("/api/blocks", blocksRouter);
   app.use("/api/voters", votersRouter);
   app.use("/api/votes", votesRouter);
   app.use("/api/admin", adminRouter);

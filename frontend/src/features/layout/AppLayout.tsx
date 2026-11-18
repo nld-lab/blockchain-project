@@ -1,6 +1,7 @@
 import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -53,11 +54,53 @@ export function AppLayout({ children }: { children: ReactNode }) {
             >
               Accueil
             </NavLink>
-            <NavLink className="border-b-2 border-transparent px-3 py-2 text-[#5b5042] transition-colors hover:border-[#bcae98] hover:text-[#171512]" to="/vote">
+            <NavLink
+              className={({ isActive }) =>
+                `border-b-2 px-3 py-2 transition-colors ${
+                  isActive
+                    ? "border-[#b87812] text-[#171512]"
+                    : "border-transparent text-[#5b5042] hover:border-[#bcae98] hover:text-[#171512]"
+                }`
+              }
+              to="/vote"
+            >
               Voter
             </NavLink>
-            <NavLink className="border-b-2 border-transparent px-3 py-2 text-[#5b5042] transition-colors hover:border-[#bcae98] hover:text-[#171512]" to="/resultats">
+            <NavLink
+              className={({ isActive }) =>
+                `border-b-2 px-3 py-2 transition-colors ${
+                  isActive
+                    ? "border-[#b87812] text-[#171512]"
+                    : "border-transparent text-[#5b5042] hover:border-[#bcae98] hover:text-[#171512]"
+                }`
+              }
+              to="/resultats"
+            >
               Résultats
+            </NavLink>
+            <NavLink
+              className={({ isActive }) =>
+                `border-b-2 px-3 py-2 transition-colors ${
+                  isActive
+                    ? "border-[#b87812] text-[#171512]"
+                    : "border-transparent text-[#5b5042] hover:border-[#bcae98] hover:text-[#171512]"
+                }`
+              }
+              to="/blocs"
+            >
+              Blocs
+            </NavLink>
+            <NavLink
+              className={({ isActive }) =>
+                `border-b-2 px-3 py-2 transition-colors ${
+                  isActive
+                    ? "border-[#b87812] text-[#171512]"
+                    : "border-transparent text-[#5b5042] hover:border-[#bcae98] hover:text-[#171512]"
+                }`
+              }
+              to={"admin"}
+            >
+              <Button>Créer un scrutin</Button>
             </NavLink>
           </nav>
         </div>
@@ -83,11 +126,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <Link className="text-[#5b5042] hover:text-[#171512]" to="/vote">
                 Participer à un vote
               </Link>
-              <Link className="text-[#5b5042] hover:text-[#171512]" to="/resultats">
+              <Link
+                className="text-[#5b5042] hover:text-[#171512]"
+                to="/resultats"
+              >
                 Voir les résultats
               </Link>
               <Link className="text-[#5b5042] hover:text-[#171512]" to="/admin">
                 Administration
+              </Link>
+              <Link className="text-[#5b5042] hover:text-[#171512]" to="/blocs">
+                Registre des blocs
               </Link>
             </nav>
           </div>
