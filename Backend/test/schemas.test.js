@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createElectionSchema, identitySchema, voteSchema } from "../src/schemas.js";
+import { adminLoginSchema, createElectionSchema, identitySchema, voteSchema } from "../src/schemas.js";
 
 test("refuse une identification vide", () => {
   const parsed = identitySchema.safeParse({ idNumber: "   ", fullName: "" });
@@ -10,6 +10,11 @@ test("refuse une identification vide", () => {
 test("refuse un vote sans choix numérique", () => {
   const parsed = voteSchema.safeParse({ idNumber: "10234567890", fullName: "Koffi", choiceId: "1" });
   assert.equal(parsed.success, false);
+});
+
+test("accepte la connexion admin et refuse un mot de passe vide", () => {
+  assert.equal(adminLoginSchema.safeParse({ username: "admin", password: "secret" }).success, true);
+  assert.equal(adminLoginSchema.safeParse({ username: " ", password: "" }).success, false);
 });
 
 test("accepte le numéro de CNI avec ou sans tirets", () => {

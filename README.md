@@ -116,7 +116,9 @@ Variables principales :
 | `PORT` | `3000` | Port HTTP de l'API |
 | `CORS_ORIGIN` | `http://localhost:5173` | Origine autorisée du frontend |
 | `HMAC_SECRET` | valeur aléatoire | Secret de hachage des identités |
-| `ADMIN_API_KEY` | valeur aléatoire | Clé des routes d'administration |
+| `DATABASE_URL` | `postgresql://vote:vote@127.0.0.1:5432/vote` | Base Postgres des comptes admin |
+| `ADMIN_USERNAME` | `admin` | Identifiant créé au premier démarrage |
+| `ADMIN_PASSWORD` | valeur aléatoire | Mot de passe du premier administrateur |
 | `RPC_URL` | `http://127.0.0.1:8545` | URL JSON-RPC |
 | `CHAIN_ID` | `31337` | Identifiant du réseau Hardhat |
 | `CONTRACT_ADDRESS` | rempli au déploiement | Adresse du contrat |
@@ -207,6 +209,9 @@ Vite affiche l'URL locale, généralement `http://localhost:5173`.
 
 ## Démarrage avec Docker
 
+Docker Compose démarre Postgres, le nœud Hardhat, déploie le contrat,
+puis lance l'API et le frontend. Le premier compte administrateur est créé
+depuis `ADMIN_USERNAME` et `ADMIN_PASSWORD` si ce compte n'existe pas encore.
 Docker Compose démarre trois validateurs en preuve d'autorité. Un bloc est
 ajouté seulement quand une transaction arrive : l'un des validateurs le propose
 et les autres le reconnaissent. Le contrat est ensuite déployé, puis l'API et
@@ -263,17 +268,16 @@ successifs sur le logo **VOTE** dans la barre de navigation, dans un délai
 d'environ 1,2 seconde.
 
 Cette interaction masque le lien dans l'interface, mais ne constitue pas une
-authentification. La protection réelle repose sur l'en-tête `x-admin-key` et
-la clé `ADMIN_API_KEY` côté backend. Pour une exposition publique, ajoutez une
-authentification et une autorisation adaptées avant la mise en production.
+authentification. La protection réelle est le compte administrateur vérifié
+dans Postgres. Le frontend doit obtenir une session avec `POST /api/admin/login`,
+puis l'envoyer sur les routes d'administration.
 
 Dans l'espace d'administration :
 
-1. saisir la clé administrateur ;
-2. créer le scrutin avec un titre et au moins deux choix ;
-3. ouvrir le vote ;
-4. clôturer le vote ;
-5. publier les résultats.
+1. créer le scrutin avec un titre et au moins deux choix ;
+2. ouvrir le vote ;
+3. clôturer le vote ;
+4. publier les résultats.
 
 ## Cycle de vie d'un scrutin
 
@@ -327,14 +331,16 @@ Corps de la requête de vote :
 
 ### Routes d'administration
 
-Ces routes exigent l'en-tête :
+La connexion renvoie un jeton de session. Les autres routes exigent l'en-tête :
 
 ```text
-x-admin-key: <ADMIN_API_KEY>
+Authorization: Bearer <jeton>
 ```
 
 | Méthode | Route | Description |
 | --- | --- | --- |
+| `POST` | `/api/admin/login` | Ouvrir une session |
+| `POST` | `/api/admin/logout` | Fermer la session |
 | `POST` | `/api/admin/election` | Créer un scrutin |
 | `POST` | `/api/admin/election/open` | Ouvrir le vote |
 | `POST` | `/api/admin/election/close` | Clôturer le vote |
@@ -388,7 +394,7 @@ Ne commitez jamais :
 
 - `Backend/.env` ;
 - une clé privée de production ;
-- `ADMIN_API_KEY` ;
+- `ADMIN_PASSWORD` ;
 - `HMAC_SECRET` ;
 - des données électeurs réelles.
 
@@ -482,7 +488,6 @@ l'identité n'a pas déjà voté.
 
 ## Limites et prochaines étapes
 
-- ajouter une authentification admin plus forte qu'une clé partagée ;
 - protéger directement la route `/admin`, et pas seulement la navigation ;
 - ajouter des tests frontend pour l'identification, le vote et la confirmation ;
 - ajouter des tests d'intégration API et smart contract ;

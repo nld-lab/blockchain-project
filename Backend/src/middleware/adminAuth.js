@@ -1,17 +1,23 @@
-import { timingSafeEqual } from "node:crypto";
 import { config } from "../config.js";
+import { findAdminSession } from "../db/adminStore.js";
 import { httpError } from "../httpError.js";
 
-export function adminAuth(req, _res, next) {
-  if (!config.adminApiKey) {
-    return next(httpError(503, "ADMIN_NOT_CONFIGURED", "La clé admin n'est pas configurée."));
-  }
+export async function adminAuth(req, _res, next) {
+  try {
+    if (!config.databaseUrl) {
+      return next(httpError(503, "DATABASE_UNAVAILABLE", "La base d'authentification n'est pas configurée."));
+    }
 
-  const provided = Buffer.from(req.get("x-admin-key") || "");
-  const expected = Buffer.from(config.adminApiKey);
-  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
-    return next(httpError(401, "UNAUTHORIZED", "Clé admin invalide."));
-  }
+    const header = req.get("authorization") || "";
+    const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+    const session = await findAdminSession(token);
+    if (!session) {
+      return next(httpError(401, "UNAUTHORIZED", "Connexion administrateur requise."));
+    }
 
-  return next();
+    req.admin = session;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 }

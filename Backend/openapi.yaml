@@ -93,11 +93,32 @@ paths:
           description: Vote enregistré
         "409":
           description: Déjà voté, ou scrutin fermé
+  /api/admin/login:
+    post:
+      summary: Ouvrir une session administrateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Session ouverte. Le jeton n'est plus renvoyé ensuite.
+        "401":
+          description: Identifiants invalides
   /api/admin/election:
     post:
       summary: Créer le scrutin
-      parameters:
-        - $ref: "#/components/parameters/AdminKey"
+      security:
+        - AdminSession: []
       requestBody:
         required: true
         content:
@@ -108,39 +129,36 @@ paths:
         "201":
           description: Scrutin créé
         "401":
-          description: Clé admin invalide
+          description: Session absente ou invalide
   /api/admin/election/open:
     post:
       summary: Ouvrir le scrutin
-      parameters:
-        - $ref: "#/components/parameters/AdminKey"
+      security:
+        - AdminSession: []
       responses:
         "200":
           description: Scrutin ouvert
   /api/admin/election/close:
     post:
       summary: Clôturer le scrutin
-      parameters:
-        - $ref: "#/components/parameters/AdminKey"
+      security:
+        - AdminSession: []
       responses:
         "200":
           description: Scrutin clôturé
   /api/admin/election/publish-results:
     post:
       summary: Publier les résultats
-      parameters:
-        - $ref: "#/components/parameters/AdminKey"
+      security:
+        - AdminSession: []
       responses:
         "200":
           description: Résultats publiés
 components:
-  parameters:
-    AdminKey:
-      in: header
-      name: x-admin-key
-      required: true
-      schema:
-        type: string
+  securitySchemes:
+    AdminSession:
+      type: http
+      scheme: bearer
   schemas:
     Identity:
       type: object
