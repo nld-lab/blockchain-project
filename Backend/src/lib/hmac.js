@@ -1,14 +1,13 @@
 import { createHmac } from "node:crypto";
 import { httpError } from "../httpError.js";
-import { identityMaterial } from "./identity.js";
+import { isTogoCniNumber, normalizeId } from "./identity.js";
 
 export function voterHash(idNumber, fullName, secret) {
   if (!secret) {
     throw httpError(503, "HMAC_NOT_CONFIGURED", "Le secret HMAC n'est pas configuré.");
   }
 
-  const material = identityMaterial(idNumber, fullName);
-  if (!material) {
+  if (!isTogoCniNumber(idNumber)) {
     throw httpError(
       400,
       "INVALID_IDENTITY",
@@ -16,5 +15,14 @@ export function voterHash(idNumber, fullName, secret) {
     );
   }
 
-  return `0x${createHmac("sha256", secret).update(material).digest("hex")}`;
+  const cardNumber = normalizeId(idNumber);
+  if (!fullName || !String(fullName).trim()) {
+    throw httpError(
+      400,
+      "INVALID_IDENTITY",
+      "Le nom complet est requis.",
+    );
+  }
+
+  return `0x${createHmac("sha256", secret).update(cardNumber).digest("hex")}`;
 }

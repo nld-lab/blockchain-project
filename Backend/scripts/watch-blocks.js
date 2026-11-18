@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { Interface, JsonRpcProvider } from "ethers";
 import { votingAbi } from "../src/chain/votingAbi.js";
+import validatorNames from "../chain/consensus/validators.json" with { type: "json" };
 
 const rpcUrl = process.env.RPC_URL || "http://127.0.0.1:8545";
 const provider = new JsonRpcProvider(rpcUrl);
@@ -54,11 +55,30 @@ async function readBlock(block) {
   return { heading, securityHashes };
 }
 
+function signerLabel(address) {
+  const name = validatorNames[String(address).toLowerCase()];
+  return name ? `${name}  ${address}` : address;
+}
+
 function printHashes(block, securityHashes) {
   console.log(`Previous  ${block.parentHash}`);
   console.log(`Hash      ${block.hash}`);
   for (const securityHash of securityHashes) {
     console.log(`Security  ${securityHash}`);
+  }
+}
+
+async function printConsensus(blockNumber) {
+  const hex = `0x${blockNumber.toString(16)}`;
+  try {
+    const [proposer, signers] = await Promise.all([
+      provider.send("clique_getSigner", [hex]),
+      provider.send("clique_getSigners", [hex]),
+    ]);
+    console.log(`Proposer  ${signerLabel(proposer)}`);
+    console.log(`Signers   ${signers.map(signerLabel).join("  |  ")}`);
+  } catch {
+    // Le nœud Hardhat seul ne fournit pas les validateurs.
   }
 }
 
@@ -95,6 +115,7 @@ for (let number = 0; number <= latest; number += 1) {
   const { heading, securityHashes } = await readBlock(block);
   printReady(heading);
   printHashes(block, securityHashes);
+  await printConsensus(block.number);
 }
 
 console.log("\nEn attente des prochains blocs…");
@@ -105,6 +126,7 @@ provider.on("block", async (number) => {
     const { heading, securityHashes } = await readBlock(block);
     await showNew(heading);
     printHashes(block, securityHashes);
+    await printConsensus(block.number);
   } catch (error) {
     console.error("Lecture du bloc impossible.");
     console.error(error.message);

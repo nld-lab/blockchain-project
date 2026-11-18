@@ -212,6 +212,10 @@ Vite affiche l'URL locale, généralement `http://localhost:5173`.
 Docker Compose démarre Postgres, le nœud Hardhat, déploie le contrat,
 puis lance l'API et le frontend. Le premier compte administrateur est créé
 depuis `ADMIN_USERNAME` et `ADMIN_PASSWORD` si ce compte n'existe pas encore.
+Docker Compose démarre trois validateurs en preuve d'autorité. Un bloc est
+ajouté seulement quand une transaction arrive : l'un des validateurs le propose
+et les autres le reconnaissent. Le contrat est ensuite déployé, puis l'API et
+le frontend démarrent :
 
 ```bash
 docker compose up --build
