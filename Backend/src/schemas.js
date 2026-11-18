@@ -14,6 +14,11 @@ export const voteSchema = identitySchema.extend({
   choiceId: z.number().int().nonnegative("Le choix est invalide."),
 });
 
+export const adminLoginSchema = z.object({
+  username: z.string().trim().min(1, "L'identifiant est requis.").max(80),
+  password: z.string().min(1, "Le mot de passe est requis.").max(200),
+});
+
 export const createElectionSchema = z.object({
   title: z.string().trim().min(1, "L'intitulé est requis.").max(200),
   choices: z

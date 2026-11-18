@@ -1,4 +1,20 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vote}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vote}
+      POSTGRES_DB: ${POSTGRES_DB:-vote}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - vote-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vote} -d ${POSTGRES_DB:-vote}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   blockchain:
     build:
       context: ./Backend
@@ -28,12 +44,16 @@ services:
       PORT: 3000
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       HMAC_SECRET: ${HMAC_SECRET:-change-me}
-      ADMIN_API_KEY: ${ADMIN_API_KEY:-change-me-admin}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vote}:${POSTGRES_PASSWORD:-vote}@postgres:5432/${POSTGRES_DB:-vote}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-admin}
       RPC_URL: http://blockchain:8545
       HARDHAT_RPC_URL: http://blockchain:8545
       CHAIN_ID: 31337
       RELAYER_PRIVATE_KEY: ${RELAYER_PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}
     depends_on:
+      postgres:
+        condition: service_healthy
       blockchain:
         condition: service_healthy
     ports:
@@ -57,3 +77,6 @@ services:
         condition: service_healthy
     ports:
       - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  vote-postgres:
