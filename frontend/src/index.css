@@ -161,8 +161,17 @@ h1 {
   *::before,
   *::after {
     scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  }
+
+  button,
+  a,
+  input,
+  [role="button"] {
+    transition-duration: 150ms !important;
+  }
+
+  .animate-spin {
+    animation-duration: 1.2s !important;
+    animation-iteration-count: infinite !important;
   }
 }

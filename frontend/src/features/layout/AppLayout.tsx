@@ -2,8 +2,10 @@ import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAdminAuth } from "@/features/admin/adminAuth";
 
 export function AppLayout({ children }: { children: ReactNode }) {
+  const { session, logout } = useAdminAuth();
   const navigate = useNavigate();
   const logoClickCount = useRef(0);
   const logoResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,18 +92,38 @@ export function AppLayout({ children }: { children: ReactNode }) {
             >
               Blocs
             </NavLink>
-            <NavLink
-              className={({ isActive }) =>
-                `border-b-2 px-3 py-2 transition-colors ${
-                  isActive
-                    ? "border-[#b87812] text-[#171512]"
-                    : "border-transparent text-[#5b5042] hover:border-[#bcae98] hover:text-[#171512]"
-                }`
-              }
-              to={"admin"}
-            >
-              <Button>Créer un scrutin</Button>
-            </NavLink>
+            {session ? (
+              <>
+                <NavLink
+                  className={({ isActive }) =>
+                    `border-b-2 px-3 py-2 transition-colors ${
+                      isActive
+                        ? "border-[#b87812] text-[#171512]"
+                        : "border-transparent text-[#5b5042] hover:border-[#bcae98] hover:text-[#171512]"
+                    }`
+                  }
+                  to="/admin"
+                >
+                  {session.username}
+                </NavLink>
+                <Button variant="outline" onClick={() => void logout()}>
+                  Déconnexion
+                </Button>
+              </>
+            ) : (
+              <NavLink
+                className={({ isActive }) =>
+                  `border-b-2 px-3 py-2 transition-colors ${
+                    isActive
+                      ? "border-[#b87812] text-[#171512]"
+                      : "border-transparent text-[#5b5042] hover:border-[#bcae98] hover:text-[#171512]"
+                  }`
+                }
+                to="/admin"
+              >
+                <Button>Administration</Button>
+              </NavLink>
+            )}
           </nav>
         </div>
       </header>

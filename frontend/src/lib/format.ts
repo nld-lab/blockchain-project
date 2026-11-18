@@ -33,7 +33,7 @@ export function errorMessage(error: unknown) {
     ALREADY_VOTED: "Vous avez déjà participé à ce scrutin.",
     ELECTION_NOT_OPEN: "Le scrutin n'est pas ouvert actuellement.",
     INVALID_CHOICE: "Le choix sélectionné n'est plus valide.",
-    UNAUTHORIZED: "La clé administrateur est incorrecte.",
+    UNAUTHORIZED: "Identifiants administrateur invalides.",
     INVALID_STATE: "Cette action n'est pas disponible dans l'état actuel.",
     RATE_LIMIT: "Trop de tentatives. Veuillez patienter.",
     CHAIN_UNREACHABLE: "Le service blockchain est momentanément indisponible.",

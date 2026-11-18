@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "dev": "node scripts/stop-server.js && node --watch src/server.js",
+    "dev:stop": "node scripts/stop-server.js",
     "test": "node --test",
     "chain:compile": "hardhat compile",
     "chain:node": "hardhat node",

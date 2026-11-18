@@ -8,13 +8,13 @@
 const VoteApi = (() => {
   const baseUrl = "http://localhost:3000";
 
-  async function request(path, { method = "GET", body, adminKey } = {}) {
+  async function request(path, { method = "GET", body, token } = {}) {
     const headers = {};
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";
     }
-    if (adminKey) {
-      headers["x-admin-key"] = adminKey;
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     const response = await fetch(`${baseUrl}${path}`, {
@@ -61,22 +61,36 @@ const VoteApi = (() => {
       return request("/api/election/transactions");
     },
 
-    // Écran admin. La clé est saisie par l'admin, elle n'est pas écrite dans la page électeur.
-    createElection(adminKey, title, choices) {
+    // Authentification admin.
+    adminLogin(username, password) {
+      return request("/api/admin/login", {
+        method: "POST",
+        body: { username, password },
+      });
+    },
+    getAdminSession(token) {
+      return request("/api/admin/me", { token });
+    },
+    adminLogout(token) {
+      return request("/api/admin/logout", { method: "POST", token });
+    },
+
+    // Écran admin.
+    createElection(token, title, choices) {
       return request("/api/admin/election", {
         method: "POST",
-        adminKey,
+        token,
         body: { title, choices },
       });
     },
-    openElection(adminKey) {
-      return request("/api/admin/election/open", { method: "POST", adminKey });
+    openElection(token) {
+      return request("/api/admin/election/open", { method: "POST", token });
     },
-    closeElection(adminKey) {
-      return request("/api/admin/election/close", { method: "POST", adminKey });
+    closeElection(token) {
+      return request("/api/admin/election/close", { method: "POST", token });
     },
-    publishResults(adminKey) {
-      return request("/api/admin/election/publish-results", { method: "POST", adminKey });
+    publishResults(token) {
+      return request("/api/admin/election/publish-results", { method: "POST", token });
     },
   };
 })();

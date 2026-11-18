@@ -37,11 +37,12 @@ export async function setupDatabase() {
 
   if (!config.adminUsername || !config.adminPassword) return;
 
-  const existing = await pool.query("SELECT id FROM admins WHERE username = $1", [config.adminUsername]);
-  if (existing.rowCount > 0) return;
-
   await pool.query(
-    "INSERT INTO admins (username, password_hash) VALUES ($1, $2)",
+    `INSERT INTO admins (username, password_hash)
+     VALUES ($1, $2)
+     ON CONFLICT (username)
+     DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                   updated_at = now()`,
     [config.adminUsername, await hashPassword(config.adminPassword)],
   );
 }

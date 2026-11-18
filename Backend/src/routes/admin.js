@@ -36,6 +36,12 @@ adminRouter.post("/logout", adminAuth, async (req, res, next) => {
   }
 });
 
+adminRouter.get("/me", adminAuth, async (req, res) => {
+  res.json({
+    username: req.admin.username,
+  });
+});
+
 adminRouter.use(adminAuth);
 
 adminRouter.post("/election", validate(createElectionSchema), async (req, res, next) => {

@@ -1,14 +1,14 @@
-import type { ApiError, Block, Election, Transaction, VoterStatus } from "@/types/election";
+import type { AdminSession, ApiError, Block, Election, Transaction, VoterStatus } from "@/types/election";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 async function request<T>(
   path: string,
-  options: { method?: string; body?: unknown; adminKey?: string } = {},
+  options: { method?: string; body?: unknown; token?: string } = {},
 ): Promise<T> {
   const headers: Record<string, string> = {};
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
-  if (options.adminKey) headers["x-admin-key"] = options.adminKey;
+  if (options.token) headers["Authorization"] = `Bearer ${options.token}`;
 
   const response = await fetch(`${API_URL}${path}`, {
     method: options.method || "GET",
@@ -33,6 +33,18 @@ async function request<T>(
 
 export const api = {
   getElection: () => request<Election>("/api/election"),
+  adminLogin: (username: string, password: string) =>
+    request<AdminSession>("/api/admin/login", {
+      method: "POST",
+      body: { username, password },
+    }),
+  getAdminSession: (token: string) =>
+    request<{ username: string }>("/api/admin/me", { token }),
+  adminLogout: (token: string) =>
+    request<{ status: string }>("/api/admin/logout", {
+      method: "POST",
+      token,
+    }),
   identify: (idNumber: string, fullName: string) =>
     request<VoterStatus>("/api/voters/identify", {
       method: "POST",
@@ -45,19 +57,19 @@ export const api = {
     }),
   getTransactions: () => request<{ transactions: Transaction[] }>("/api/election/transactions"),
   getBlocks: () => request<{ blocks: Block[] }>("/api/blocks?limit=40"),
-  createElection: (adminKey: string, title: string, choices: string[]) =>
+  createElection: (token: string, title: string, choices: string[]) =>
     request<{ txHash: string }>("/api/admin/election", {
       method: "POST",
-      adminKey,
+      token,
       body: { title, choices },
     }),
-  openElection: (adminKey: string) =>
-    request<{ txHash: string }>("/api/admin/election/open", { method: "POST", adminKey }),
-  closeElection: (adminKey: string) =>
-    request<{ txHash: string }>("/api/admin/election/close", { method: "POST", adminKey }),
-  publishResults: (adminKey: string) =>
+  openElection: (token: string) =>
+    request<{ txHash: string }>("/api/admin/election/open", { method: "POST", token }),
+  closeElection: (token: string) =>
+    request<{ txHash: string }>("/api/admin/election/close", { method: "POST", token }),
+  publishResults: (token: string) =>
     request<{ txHash: string }>("/api/admin/election/publish-results", {
       method: "POST",
-      adminKey,
+      token,
     }),
 };

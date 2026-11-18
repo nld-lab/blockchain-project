@@ -33,6 +33,11 @@ export type Block = {
   transactionCount: number;
 };
 
+export type AdminSession = {
+  token: string;
+  username: string;
+};
+
 export type ApiError = Error & {
   code?: string;
   status?: number;
