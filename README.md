@@ -207,8 +207,9 @@ Vite affiche l'URL locale, généralement `http://localhost:5173`.
 
 ## Démarrage avec Docker
 
-Docker Compose démarre automatiquement le nœud Hardhat, déploie le contrat,
-puis lance l'API et le frontend :
+Docker Compose démarre trois validateurs en preuve d'autorité. Un bloc est
+ajouté quand l'un d'eux le propose et que l'ensemble des signataires le
+reconnaît. Le contrat est ensuite déployé, puis l'API et le frontend démarrent :
 
 ```bash
 docker compose up --build

@@ -1,24 +1,56 @@
+x-geth: &geth
+  image: ethereum/client-go:v1.13.15
+  entrypoint: ["sh", "-c", "sed 's/\\r$$//' /consensus/start-validator.sh | sh"]
+  volumes:
+    - ./Backend/chain/consensus:/consensus:ro
+
 services:
   blockchain:
-    build:
-      context: ./Backend
-      dockerfile: Dockerfile
-    command: npx hardhat node --hostname 0.0.0.0
-    working_dir: /app
+    <<: *geth
+    environment:
+      HTTP_API: eth,net,web3,txpool,clique
+      NODE_NAME: blockchain
+      NODE_KEY: 8b5da88db84b292e2912a6df99182e5aef8c7af50e38b1ac5ecb5d2fc87413b2
+      PEERS: "validator-2:6ce8a5c29c780ea9be340bc7344baf7d26163721b9dc1d84003df1360131c36f93f9822b529e7773911ddab7380ed79602a551505af1085af9483938eebb97ee,validator-3:e8ed36ce3dd71087d78b0ad3c8572d06d4bd5fdba69eae4f6dcb2af7a2ba9390381273ea91845df284da218a26fccdac9af3ba29c52bdfb7eb2ba5296473edd4"
+      VALIDATOR_NAME: validator-1
+      VALIDATOR_ADDRESS: "0x4041A4E0fC977a916B2F28Db947dF2695e8f21aB"
     ports:
       - "${RPC_PORT:-8545}:8545"
+    volumes:
+      - ./Backend/chain/consensus:/consensus:ro
+      - validator-1:/data
     healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - >-
-          fetch('http://localhost:8545',{method:'POST',headers:{'content-type':'application/json'},
-          body:'{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'})
-          .then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))
+      test: ["CMD-SHELL", "wget -qO- --post-data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_chainId\",\"params\":[],\"id\":1}' --header Content-Type:application/json http://127.0.0.1:8545"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 30
+      start_period: 10s
+
+  validator-2:
+    <<: *geth
+    environment:
+      HTTP_API: eth,net,web3,txpool,clique
+      NODE_NAME: validator-2
+      NODE_KEY: 43c5f3a07a8d17ee598b6f79ed5a0410227833c11d985eeef84e37bf0d7d3d2f
+      PEERS: "blockchain:beb73644cf2305c1a2b72dbe1ddb01afb2b7e04dd961906d2eb920362b13bdd6ab624a5ef38a569ea2d98db7323352714e4260c1a051da8db49e15bd6ed75c97,validator-3:e8ed36ce3dd71087d78b0ad3c8572d06d4bd5fdba69eae4f6dcb2af7a2ba9390381273ea91845df284da218a26fccdac9af3ba29c52bdfb7eb2ba5296473edd4"
+      VALIDATOR_NAME: validator-2
+      VALIDATOR_ADDRESS: "0x07df6aF1B496d403E7D046f0f2940810dD3A09f6"
+    volumes:
+      - ./Backend/chain/consensus:/consensus:ro
+      - validator-2:/data
+
+  validator-3:
+    <<: *geth
+    environment:
+      HTTP_API: eth,net,web3,txpool,clique
+      NODE_NAME: validator-3
+      NODE_KEY: 8265ae27e847de62199119bcef220cc8cc5ad321a94075a09814d5d891a4b170
+      PEERS: "blockchain:beb73644cf2305c1a2b72dbe1ddb01afb2b7e04dd961906d2eb920362b13bdd6ab624a5ef38a569ea2d98db7323352714e4260c1a051da8db49e15bd6ed75c97,validator-2:6ce8a5c29c780ea9be340bc7344baf7d26163721b9dc1d84003df1360131c36f93f9822b529e7773911ddab7380ed79602a551505af1085af9483938eebb97ee"
+      VALIDATOR_NAME: validator-3
+      VALIDATOR_ADDRESS: "0xb10e529fa6a5AE90E4b681045C20846BfdE1fAcC"
+    volumes:
+      - ./Backend/chain/consensus:/consensus:ro
+      - validator-3:/data
 
   backend:
     build:
@@ -36,6 +68,10 @@ services:
     depends_on:
       blockchain:
         condition: service_healthy
+      validator-2:
+        condition: service_started
+      validator-3:
+        condition: service_started
     ports:
       - "${BACKEND_PORT:-3100}:3000"
     command: ["sh", "-c", "npm run chain:compile && npm run chain:deploy && exec npm start"]
@@ -43,8 +79,8 @@ services:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
       interval: 5s
       timeout: 5s
-      retries: 20
-      start_period: 10s
+      retries: 30
+      start_period: 60s
 
   frontend:
     build:
@@ -57,3 +93,8 @@ services:
         condition: service_healthy
     ports:
       - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  validator-1:
+  validator-2:
+  validator-3:
