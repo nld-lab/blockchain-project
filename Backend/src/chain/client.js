@@ -174,10 +174,8 @@ export async function submitVote(chain, voterHashValue, choiceId) {
   if (await chain.hasVoted(voterHashValue)) {
     throw httpError(409, "ALREADY_VOTED", "Cet électeur a déjà voté.");
   }
-  if (!(await chain.registered(voterHashValue))) {
-    const registration = await chain.registerVoter(voterHashValue);
-    await registration.wait();
-  }
+
+  // castVote enregistre et marque le vote dans la même transaction.
   const vote = await chain.castVote(voterHashValue, choiceId);
   const receipt = await vote.wait();
   return { txHash: receipt.hash, status: "voted" };

@@ -33,6 +33,13 @@ test("produit un HMAC-SHA256 stable et secret", () => {
   assert.equal(first.includes("KOFFI"), false);
 });
 
+test("identifie uniquement avec le numéro de carte", () => {
+  const first = voterHash(CARD, "Koffi Amé", "secret-a");
+  const sameCardDifferentName = voterHash(CARD, "Autre Nom", "secret-a");
+
+  assert.equal(first, sameCardDifferentName);
+});
+
 test("refuse une identité vide ou mal formée", () => {
   assert.throws(() => voterHash("   ", "Koffi", "secret"), (error) => error.code === "INVALID_IDENTITY");
   assert.throws(() => voterHash("AB123", "Koffi", "secret"), (error) => error.code === "INVALID_IDENTITY");
