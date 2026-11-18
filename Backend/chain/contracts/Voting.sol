@@ -93,9 +93,14 @@ contract Voting {
 
     function castVote(bytes32 voterHash, uint256 choiceId) external onlyOwner {
         require(state == State.Open, "Vote ferme");
-        require(registered[voterHash], "Electeur non inscrit");
+        require(voterHash != bytes32(0), "Hash invalide");
         require(!hasVoted[voterHash], "Deja vote");
         require(choiceId < choices.length, "Choix invalide");
+
+        if (!registered[voterHash]) {
+            registered[voterHash] = true;
+            emit VoterRegistered(voterHash);
+        }
 
         hasVoted[voterHash] = true;
         tallies[choiceId] += 1;
